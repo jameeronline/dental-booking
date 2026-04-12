@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  password     String
+  name         String
+  phone        String?
+  role         String    @default("PATIENT")
+  avatarUrl    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  dentist      Dentist?
+  patient     Patient?
+  appointments Appointment[]
+}
+
+model Dentist {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialization   String
+  bio              String?
+  consultationFee  Float     @default(0)
+  photoUrl         String?
+  isActive         Boolean   @default(true)
+  socialLinks      String?
+  createdAt        DateTime  @default(now())
+
+  appointments     Appointment[]
+  availability     Availability[]
+  medicalNotes     MedicalNote[]
+  visits           Visit[]
+  prescriptions     Prescription[]
+}
+
+model Service {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  duration    Int       @default(30)
+  price       Float     @default(0)
+  isActive    Boolean   @default(true)
+  category    String    @default("CONSULTATION")
+  createdAt   DateTime  @default(now())
+
+  appointments Appointment[]
+}
+
+model Appointment {
+  id                 String    @id @default(cuid())
+  patientId          String
+  patient            User      @relation(fields: [patientId], references: [id])
+  dentistId          String
+  dentist            Dentist   @relation(fields: [dentistId], references: [id])
+  serviceId          String
+  service            Service   @relation(fields: [serviceId], references: [id])
+  dateTime           DateTime
+  endDateTime        DateTime
+  status             String    @default("PENDING")
+  notes              String?
+  cancellationReason String?
+  paymentStatus      String    @default("PENDING")
+  paymentAmount     Float     @default(0)
+  depositAmount      Float     @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  payments       Payment[]
+  medicalNotes   MedicalNote[]
+}
+
+model Availability {
+  id            String    @id @default(cuid())
+  dentistId     String
+  dentist       Dentist   @relation(fields: [dentistId], references: [id], onDelete: Cascade)
+  dayOfWeek     Int       @default(0)
+  startTime     String    @default("09:00")
+  endTime       String    @default("17:00")
+  isBlocked     Boolean   @default(false)
+  specificDate  DateTime?
+  createdAt     DateTime  @default(now())
+}
+
+model Payment {
+  id                    String    @id @default(cuid())
+  appointmentId         String
+  appointment           Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  amount                Float     @default(0)
+  type                  String    @default("FULL")
+  stripePaymentIntentId String?
+  status                String    @default("PENDING")
+  createdAt             DateTime  @default(now())
+}
+
+model MedicalNote {
+  id            String       @id @default(cuid())
+  appointmentId String
+  appointment   Appointment  @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  dentistId     String
+  dentist       Dentist      @relation(fields: [dentistId], references: [id])
+  notes         String
+  createdAt     DateTime     @default(now())
+}
+
+model Settings {
+  id                String   @id @default("global")
+  bufferMinutes     Int      @default(15)
+  bookingDaysAhead  Int      @default(30)
+  clinicName        String   @default("DentalBook")
+  clinicPhone       String?
+  clinicEmail       String?
+  clinicAddress     String?
+  patientCounter    Int      @default(0)
+  updatedAt         DateTime @updatedAt
+}
+
+model Patient {
+  id                    String    @id @default(cuid())
+  fileNumber            String    @unique
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth           DateTime?
+  gender                String?
+  bloodType             String?
+  allergies             String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  visits         Visit[]
+  prescriptions  Prescription[]
+  documents      Document[]
+}
+
+model Visit {
+  id             String   @id @default(cuid())
+  patientId      String
+  patient        Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointmentId  String?  @unique
+  dentistId      String
+  dentist        Dentist  @relation(fields: [dentistId], references: [id])
+  date           DateTime
+  chiefComplaint String
+  findings       String?
+  diagnosis      String?
+  treatment      String?
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  prescriptions Prescription[]
+}
+
+model Prescription {
+  id          String   @id @default(cuid())
+  visitId     String?
+  visit       Visit?   @relation(fields: [visitId], references: [id])
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  dentistId   String
+  dentist     Dentist  @relation(fields: [dentistId], references: [id])
+  date        DateTime @default(now())
+  instructions String?
+  createdAt   DateTime @default(now())
+
+  medications Medication[]
+}
+
+model Medication {
+  id             String       @id @default(cuid())
+  prescriptionId String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  name           String
+  dosage         String
+  frequency      String
+  duration       String
+  instructions   String?
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  type        String
+  title       String
+  fileUrl     String
+  description String?
+  uploadedBy  String
+  createdAt   DateTime @default(now())
+}
