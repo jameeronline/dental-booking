@@ -1,5 +1,21 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Prisma
+prisma/*.db
+prisma/dev.db
+prisma/dev.db-journal
+
+# Environment
+.env
+.env.local
+.env.development.local
+
 # dependencies
 /node_modules
 /.pnp
@@ -25,15 +41,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env
-.env*.local
-
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
+
 next-env.d.ts
 
 /src/generated/prisma
