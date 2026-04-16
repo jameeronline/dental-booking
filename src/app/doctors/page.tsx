@@ -13,6 +13,7 @@ import {
   Star,
   Mail,
 } from 'lucide-react'
+import { ErrorDisplay } from '@/components/error-display'
 
 interface Dentist {
   id: string
@@ -33,6 +34,7 @@ interface Dentist {
 export default function DoctorsPage() {
   const [dentists, setDentists] = useState<Dentist[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSpecialization, setSelectedSpecialization] = useState('all')
 
@@ -41,14 +43,18 @@ export default function DoctorsPage() {
   }, [])
 
   const fetchDentists = async () => {
+    setLoading(true)
+    setError(null)
     try {
       const res = await fetch('/api/dentists')
-      if (res.ok) {
+      if (!res.ok) {
         const data = await res.json()
-        setDentists(data.filter((d: Dentist) => d.isActive))
+        throw new Error(data.error || 'Failed to load dentists')
       }
+      const data = await res.json()
+      setDentists(data.filter((d: Dentist) => d.isActive))
     } catch (err) {
-      console.error('Failed to fetch dentists:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load dentists')
     } finally {
       setLoading(false)
     }
@@ -120,6 +126,11 @@ export default function DoctorsPage() {
                 <div key={i} className="h-96 bg-muted rounded-xl animate-pulse" />
               ))}
             </div>
+          ) : error ? (
+            <ErrorDisplay
+              message={error}
+              onRetry={fetchDentists}
+            />
           ) : filteredDentists.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-muted-foreground text-lg">No doctors found matching your criteria.</p>

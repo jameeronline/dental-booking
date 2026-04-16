@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Clock, ArrowLeft, ArrowRight, Calendar, Check, User, Stethoscope } from 'lucide-react'
+import { ErrorDisplay } from '@/components/error-display'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type Service = {
   id: string
@@ -28,17 +30,7 @@ type Dentist = {
 }
 
 type TimeSlot = { time: string; available: boolean }
-type SlotResponse = { slots: TimeSlot[]; message?: string }
-
-async function getServices(): Promise<Service[]> {
-  const res = await fetch('/api/services', { cache: 'no-store' })
-  return res.json()
-}
-
-async function getDentists(): Promise<Dentist[]> {
-  const res = await fetch('/api/dentists', { cache: 'no-store' })
-  return res.json()
-}
+type SlotResponse = { slots: TimeSlot[]; message?: string; error?: string }
 
 const categoryConfig: Record<string, { label: string; variant: "default" | "secondary" | "success" | "destructive" | "outline" }> = {
   CONSULTATION: { label: 'Consultation', variant: 'default' },
@@ -50,12 +42,52 @@ const categoryConfig: Record<string, { label: string; variant: "default" | "seco
 
 const stepTitles = ['Select Service', 'Select Dentist', 'Select Date & Time', 'Your Details']
 
+function ServiceCardSkeleton() {
+  return (
+    <div className="p-4 rounded-lg border border-input">
+      <div className="flex justify-between items-start mb-2">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="w-5 h-5 rounded-full" />
+      </div>
+      <Skeleton className="h-4 w-full mb-2" />
+      <div className="flex justify-between items-center">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-5 w-16" />
+      </div>
+    </div>
+  )
+}
+
+function DentistCardSkeleton() {
+  return (
+    <div className="p-6 rounded-lg border border-input">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-4">
+          <Skeleton className="w-12 h-12 rounded-full" />
+          <div>
+            <Skeleton className="h-5 w-32 mb-1" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        </div>
+        <Skeleton className="w-5 h-5 rounded-full" />
+      </div>
+      <Skeleton className="h-4 w-full mb-3" />
+      <Skeleton className="h-4 w-24" />
+    </div>
+  )
+}
+
 function BookingContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
   const [services, setServices] = useState<Service[]>([])
   const [dentists, setDentists] = useState<Dentist[]>([])
+  const [loadingServices, setLoadingServices] = useState(true)
+  const [loadingDentists, setLoadingDentists] = useState(true)
+  const [servicesError, setServicesError] = useState<string | null>(null)
+  const [dentistsError, setDentistsError] = useState<string | null>(null)
+
   const [step, setStep] = useState(1)
   const [pendingStep, setPendingStep] = useState<number | null>(null)
   
@@ -73,19 +105,51 @@ function BookingContent() {
   const [error, setError] = useState('')
   const [slots, setSlots] = useState<TimeSlot[]>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
+  const [slotsError, setSlotsError] = useState<string | null>(null)
   const [slotsMessage, setSlotsMessage] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [patientId, setPatientId] = useState('')
 
+  const fetchServices = async () => {
+    setLoadingServices(true)
+    setServicesError(null)
+    try {
+      const res = await fetch('/api/services', { cache: 'no-store' })
+      if (!res.ok) throw new Error('Failed to load services')
+      const data = await res.json()
+      setServices(data)
+    } catch (err) {
+      setServicesError(err instanceof Error ? err.message : 'Failed to load services')
+    } finally {
+      setLoadingServices(false)
+    }
+  }
+
+  const fetchDentists = async () => {
+    setLoadingDentists(true)
+    setDentistsError(null)
+    try {
+      const res = await fetch('/api/dentists', { cache: 'no-store' })
+      if (!res.ok) throw new Error('Failed to load dentists')
+      const data = await res.json()
+      setDentists(data)
+    } catch (err) {
+      setDentistsError(err instanceof Error ? err.message : 'Failed to load dentists')
+    } finally {
+      setLoadingDentists(false)
+    }
+  }
+
   useEffect(() => {
-    getServices().then(setServices)
-    getDentists().then(setDentists)
+    fetchServices()
+    fetchDentists()
     checkLoginStatus()
   }, [])
 
   const checkLoginStatus = async () => {
     try {
       const res = await fetch('/api/auth/session')
+      if (!res.ok) return
       const session = await res.json()
       if (session?.user?.role === 'PATIENT') {
         setIsLoggedIn(true)
@@ -118,6 +182,7 @@ function BookingContent() {
   const handleDateSelect = async (date: string) => {
     setSelectedDate(date)
     setSelectedTime('')
+    setSlotsError(null)
     
     if (!selectedService || !selectedDentist) return
     
@@ -126,13 +191,23 @@ function BookingContent() {
     
     try {
       const res = await fetch(`/api/dentists/${selectedDentist}/slots?date=${date}&serviceId=${selectedService}`)
-      if (res.ok) {
-        const data: SlotResponse = await res.json()
+      if (!res.ok) {
+        const errorData = await res.json()
+        setSlotsError(errorData.error || 'Failed to load available times')
+        setSlots([])
+        return
+      }
+      const data: SlotResponse = await res.json()
+      if (data.error) {
+        setSlotsError(data.error)
+        setSlots([])
+      } else {
         setSlots(data.slots)
         if (data.message) setSlotsMessage(data.message)
       }
     } catch {
-      setSlotsMessage('Failed to load available times')
+      setSlotsError('Failed to load available times. Please try again.')
+      setSlots([])
     } finally {
       setLoadingSlots(false)
     }
@@ -176,10 +251,13 @@ function BookingContent() {
         }),
       })
 
-      if (!res.ok) throw new Error('Failed to create appointment')
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Failed to create appointment')
+      }
       router.push('/book/success')
-    } catch {
-      setError('Failed to create appointment. Please try again.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create appointment. Please try again.')
       setLoading(false)
     }
   }
@@ -226,44 +304,69 @@ function BookingContent() {
               <CardDescription>Choose the dental service you need</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {serviceCategories.map(category => {
-                  const config = categoryConfig[category] || { label: category, variant: 'secondary' as const }
-                  const categoryServices = services.filter(s => s.category === category)
-                  return (
-                    <div key={category}>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-3">{config.label}</h3>
+              {(loadingServices || loadingDentists) ? (
+                <div className="space-y-6">
+                  {[1, 2, 3].map(i => (
+                    <div key={i}>
+                      <Skeleton className="h-4 w-32 mb-3" />
                       <div className="grid gap-3 md:grid-cols-2">
-                        {categoryServices.map(service => (
-                          <button
-                            key={service.id}
-                            onClick={() => handleServiceSelect(service.id)}
-                            className={`p-4 rounded-lg border text-left transition-all hover:border-primary ${
-                              selectedService === service.id ? 'border-primary bg-primary/5 ring-2 ring-primary' : 'border-input'
-                            }`}
-                          >
-                            <div className="flex justify-between items-start mb-2">
-                              <span className="font-medium text-foreground">{service.name}</span>
-                              {selectedService === service.id && <Check className="w-5 h-5 text-primary" />}
-                            </div>
-                            {service.description && (
-                              <p className="text-sm text-muted-foreground mb-2">{service.description}</p>
-                            )}
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <Clock className="w-3 h-3" /> {service.duration} min
-                              </span>
-                              <span className="font-semibold text-primary">${service.price}</span>
-                            </div>
-                          </button>
-                        ))}
+                        {[1, 2].map(j => <ServiceCardSkeleton key={`${i}-${j}`} />)}
                       </div>
                     </div>
-                  )
-                })}
-              </div>
+                  ))}
+                </div>
+              ) : servicesError || dentistsError ? (
+                <ErrorDisplay
+                  message={servicesError || dentistsError || 'Unable to load services'}
+                  onRetry={() => {
+                    fetchServices()
+                    fetchDentists()
+                  }}
+                />
+              ) : services.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No services available at the moment. Please try again later.
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {serviceCategories.map(category => {
+                    const config = categoryConfig[category] || { label: category, variant: 'secondary' as const }
+                    const categoryServices = services.filter(s => s.category === category)
+                    return (
+                      <div key={category}>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-3">{config.label}</h3>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          {categoryServices.map(service => (
+                            <button
+                              key={service.id}
+                              onClick={() => handleServiceSelect(service.id)}
+                              className={`p-4 rounded-lg border text-left transition-all hover:border-primary ${
+                                selectedService === service.id ? 'border-primary bg-primary/5 ring-2 ring-primary' : 'border-input'
+                              }`}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <span className="font-medium text-foreground">{service.name}</span>
+                                {selectedService === service.id && <Check className="w-5 h-5 text-primary" />}
+                              </div>
+                              {service.description && (
+                                <p className="text-sm text-muted-foreground mb-2">{service.description}</p>
+                              )}
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground flex items-center gap-1">
+                                  <Clock className="w-3 h-3" /> {service.duration} min
+                                </span>
+                                <span className="font-semibold text-primary">${service.price}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
               
-              {selectedService && (
+              {selectedService && !servicesError && services.length > 0 && (
                 <div className="mt-6 flex justify-end">
                   <Button onClick={proceedToNextStep} size="lg" className="gap-2">
                     Next: Select Dentist <ArrowRight className="w-4 h-4" />
@@ -286,38 +389,54 @@ function BookingContent() {
                   <ArrowLeft className="w-4 h-4 mr-2" /> Back
                 </Button>
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                {dentists.map(dentist => (
-                  <button
-                    key={dentist.id}
-                    onClick={() => handleDentistSelect(dentist.id)}
-                    className={`p-6 rounded-lg border text-left transition-all hover:border-primary ${
-                      selectedDentist === dentist.id ? 'border-primary bg-primary/5 ring-2 ring-primary' : 'border-input'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-4">
-                        <Avatar>
-                          <AvatarFallback className="bg-primary/10 text-primary">
-                            {dentist.user.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h4 className="font-semibold text-foreground">{dentist.user.name}</h4>
-                          <p className="text-sm text-muted-foreground">{dentist.specialization}</p>
-                        </div>
-                      </div>
-                      {selectedDentist === dentist.id && <Check className="w-5 h-5 text-primary" />}
-                    </div>
-                    {dentist.bio && (
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{dentist.bio}</p>
-                    )}
-                    <p className="text-sm font-medium text-primary">${dentist.consultationFee} consultation</p>
-                  </button>
-                ))}
-              </div>
               
-              {selectedDentist && (
+              {loadingDentists ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {[1, 2, 3, 4].map(i => <DentistCardSkeleton key={i} />)}
+                </div>
+              ) : dentistsError ? (
+                <ErrorDisplay
+                  message={dentistsError}
+                  onRetry={fetchDentists}
+                />
+              ) : dentists.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No dentists available at the moment. Please try again later.
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {dentists.map(dentist => (
+                    <button
+                      key={dentist.id}
+                      onClick={() => handleDentistSelect(dentist.id)}
+                      className={`p-6 rounded-lg border text-left transition-all hover:border-primary ${
+                        selectedDentist === dentist.id ? 'border-primary bg-primary/5 ring-2 ring-primary' : 'border-input'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-4">
+                          <Avatar>
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {dentist.user.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h4 className="font-semibold text-foreground">{dentist.user.name}</h4>
+                            <p className="text-sm text-muted-foreground">{dentist.specialization}</p>
+                          </div>
+                        </div>
+                        {selectedDentist === dentist.id && <Check className="w-5 h-5 text-primary" />}
+                      </div>
+                      {dentist.bio && (
+                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{dentist.bio}</p>
+                      )}
+                      <p className="text-sm font-medium text-primary">${dentist.consultationFee} consultation</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {selectedDentist && !dentistsError && dentists.length > 0 && (
                 <div className="mt-6 flex justify-end">
                   <Button onClick={proceedToNextStep} size="lg" className="gap-2">
                     Next: Select Date & Time <ArrowRight className="w-4 h-4" />
@@ -378,7 +497,15 @@ function BookingContent() {
                   </h4>
                   {selectedDate ? (
                     loadingSlots ? (
-                      <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                      <div className="space-y-2">
+                        {[...Array(9)].map((_, i) => <Skeleton key={i} className="h-10 rounded-lg" />)}
+                      </div>
+                    ) : slotsError ? (
+                      <ErrorDisplay
+                        message={slotsError}
+                        onRetry={() => handleDateSelect(selectedDate)}
+                        className="py-4"
+                      />
                     ) : slotsMessage ? (
                       <div className="text-center py-8 text-muted-foreground">{slotsMessage}</div>
                     ) : slots.length > 0 ? (

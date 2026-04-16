@@ -22,6 +22,7 @@ import {
   Stethoscope,
   RefreshCw,
 } from 'lucide-react'
+import { ErrorDisplay } from '@/components/error-display'
 
 interface Service {
   id: string
@@ -58,6 +59,7 @@ const categoryColors: Record<string, string> = {
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
 
@@ -66,14 +68,18 @@ export default function ServicesPage() {
   }, [])
 
   const fetchServices = async () => {
+    setLoading(true)
+    setError(null)
     try {
       const res = await fetch('/api/services')
-      if (res.ok) {
+      if (!res.ok) {
         const data = await res.json()
-        setServices(data)
+        throw new Error(data.error || 'Failed to load services')
       }
+      const data = await res.json()
+      setServices(data)
     } catch (err) {
-      console.error('Failed to fetch services:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load services')
     } finally {
       setLoading(false)
     }
@@ -145,6 +151,11 @@ export default function ServicesPage() {
                 <div key={i} className="h-64 bg-muted rounded-lg animate-pulse" />
               ))}
             </div>
+          ) : error ? (
+            <ErrorDisplay
+              message={error}
+              onRetry={fetchServices}
+            />
           ) : filteredServices.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-muted-foreground text-lg">No services found matching your criteria.</p>

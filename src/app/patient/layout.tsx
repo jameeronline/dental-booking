@@ -1,7 +1,6 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
-import prisma from '@/lib/prisma'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import {
@@ -10,7 +9,6 @@ import {
   ClipboardList,
   Stethoscope,
   LayoutDashboard,
-  Settings,
   LogOut,
   Menu,
   Bell,
