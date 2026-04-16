@@ -15,6 +15,14 @@ prisma/dev.db-journal
 .env
 .env.local
 .env.development.local
+.env.production.local
+.env.test.local
+
+# listmonk (email server - contains sensitive database data)
+listmonk/
+
+# Supabase (local dev data)
+supabase/
 
 # dependencies
 /node_modules
