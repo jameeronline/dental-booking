@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
       patientName,
       patientEmail,
       patientPhone,
+      patientPassword,
       notes,
-      paymentMethod,
       patientId,
     } = body
 
@@ -109,8 +109,9 @@ export async function POST(request: NextRequest) {
       })
 
       if (!patient) {
-        const randomPassword = Math.random().toString(36).slice(-8)
-        const hashedPassword = await bcrypt.hash(randomPassword, 10)
+        // Use provided password or generate random if not provided
+        const passwordToUse = patientPassword || Math.random().toString(36).slice(-8)
+        const hashedPassword = await bcrypt.hash(passwordToUse, 10)
 
         patient = await prisma.user.create({
           data: {
@@ -125,6 +126,7 @@ export async function POST(request: NextRequest) {
       patientUserId = patient.id
     }
 
+    // Payment feature disabled - Always pay at clinic (PENDING status)
     const appointment = await prisma.appointment.create({
       data: {
         patientId: patientUserId,
@@ -133,10 +135,10 @@ export async function POST(request: NextRequest) {
         dateTime: appointmentDate,
         endDateTime,
         notes,
-        status: paymentMethod === 'now' ? 'CONFIRMED' : 'PENDING',
-        paymentStatus: paymentMethod === 'now' ? 'PAID' : 'PENDING',
+        status: 'PENDING', // Always PENDING when paying at clinic
+        paymentStatus: 'PENDING',
         paymentAmount: service.price,
-        depositAmount: paymentMethod === 'now' ? service.price : 0,
+        depositAmount: 0, // Payment collected at clinic
       },
     })
 

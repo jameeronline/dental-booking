@@ -99,8 +99,11 @@ function BookingContent() {
   const [patientName, setPatientName] = useState('')
   const [patientEmail, setPatientEmail] = useState('')
   const [patientPhone, setPatientPhone] = useState('')
+  const [patientPassword, setPatientPassword] = useState('')
   const [notes, setNotes] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState<'now' | 'clinic'>('clinic')
+  /* Payment feature disabled - Always pay at clinic
+     TODO: Re-enable if online payment is needed in the future */
+  const [paymentMethod, setPaymentMethod] = useState<'clinic'>('clinic')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [slots, setSlots] = useState<TimeSlot[]>([])
@@ -231,6 +234,11 @@ function BookingContent() {
       return
     }
 
+    if (!isLoggedIn && (!patientPassword || patientPassword.length < 6)) {
+      setError('Please create a password with at least 6 characters')
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -245,8 +253,8 @@ function BookingContent() {
           patientName,
           patientEmail,
           patientPhone,
+          patientPassword: isLoggedIn ? undefined : patientPassword,
           notes,
-          paymentMethod,
           patientId: isLoggedIn ? patientId : undefined,
         }),
       })
@@ -605,11 +613,28 @@ function BookingContent() {
                   <Label htmlFor="email">Email *</Label>
                   <Input id="email" type="email" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} placeholder="your@email.com" required />
                 </div>
+                {!isLoggedIn && (
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Create Password *</Label>
+                    <Input 
+                      id="password" 
+                      type="password" 
+                      value={patientPassword} 
+                      onChange={(e) => setPatientPassword(e.target.value)} 
+                      placeholder="Create a password for your account"
+                      minLength={6}
+                      required 
+                    />
+                    <p className="text-xs text-muted-foreground"> You'll use this to log in to your patient portal</p>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes (optional)</Label>
                   <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any specific concerns" rows={2} />
                 </div>
 
+                {/* Payment feature disabled - Always pay at clinic
+                TODO: Re-enable if online payment is needed in the future */}
                 <div className="space-y-2">
                   <Label>Payment Method</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -630,29 +655,12 @@ function BookingContent() {
                         <p className="text-sm text-muted-foreground">Pay when you visit</p>
                       </div>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('now')}
-                      className={`w-full flex items-center p-4 rounded-lg border transition-all ${
-                        paymentMethod === 'now' ? 'border-primary bg-primary/5' : 'border-input'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
-                        paymentMethod === 'now' ? 'border-primary bg-primary' : 'border-muted-foreground'
-                      }`}>
-                        {paymentMethod === 'now' && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
-                      </div>
-                      <div className="text-left">
-                        <p className="font-medium text-foreground">Pay Now</p>
-                        <p className="text-sm text-muted-foreground">Pay online to secure your booking</p>
-                      </div>
-                    </button>
                   </div>
                 </div>
               </div>
 
               <Button onClick={handleBooking} className="w-full mt-6" size="lg" disabled={loading}>
-                {loading ? 'Processing...' : paymentMethod === 'now' ? `Pay $${selectedServiceData?.price} & Book` : 'Confirm Booking'}
+                {loading ? 'Processing...' : 'Confirm Booking'}
               </Button>
             </CardContent>
           </Card>
