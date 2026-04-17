@@ -138,13 +138,13 @@ export default async function DashboardLayout({
                 Settings
               </Link>
             )}
-            <Link
+            {/* <Link
               href="/signout"
               className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-lg transition-colors"
             >
               <LogOut className="w-5 h-5" />
               Sign Out
-            </Link>
+            </Link> */}
           </div>
         </aside>
 
