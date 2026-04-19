@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
-import { Phone, Mail, MapPin, Clock, Send, MessageSquare } from 'lucide-react'
+import { sanitizeInput, sanitizeEmail } from '@/lib/utils'
+import { Phone, Mail, MapPin, Clock, Send, MessageSquare, CheckCircle } from 'lucide-react'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -18,31 +19,55 @@ export default function ContactPage() {
     message: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
   const { toast } = useToast()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
+    const sanitizedData = {
+      name: sanitizeInput(formData.name),
+      email: sanitizeEmail(formData.email),
+      phone: formData.phone ? sanitizeInput(formData.phone) : '',
+      subject: sanitizeInput(formData.subject),
+      message: sanitizeInput(formData.message),
+    }
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sanitizedData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit')
+      }
       
       toast({
         title: 'Message Sent!',
         description: 'Thank you for contacting us. We will get back to you within 24 hours.',
+        variant: 'success'
       })
       
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: ''
-      })
+      setIsSuccess(true)
+      
+      setTimeout(() => {
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: ''
+        })
+        setIsSuccess(false)
+      }, 2000)
     } catch {
       toast({
         title: 'Error',
@@ -79,7 +104,18 @@ export default function ContactPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                {isSuccess ? (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-4 animate-in fade-in zoom-in duration-300">
+                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-8 h-8 text-emerald-600" />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-xl font-semibold text-emerald-600">Message Sent!</h3>
+                      <p className="text-muted-foreground mt-2">Thank you for contacting us. We'll get back to you soon.</p>
+                    </div>
+                  </div>
+                ) : (
+                <form onSubmit={handleSubmit} className="space-y-4" aria-label="Contact form">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label htmlFor="name" className="text-sm font-medium">Full Name</label>
@@ -89,8 +125,12 @@ export default function ContactPage() {
                         placeholder="John Doe"
                         value={formData.name}
                         onChange={handleChange}
+                        autoComplete="name"
+                        autoCapitalize="words"
                         required
+                        aria-describedby="name-hint"
                       />
+                      <p id="name-hint" className="sr-only">Enter your full name</p>
                     </div>
                     <div className="space-y-2">
                       <label htmlFor="email" className="text-sm font-medium">Email Address</label>
@@ -101,8 +141,12 @@ export default function ContactPage() {
                         placeholder="john@example.com"
                         value={formData.email}
                         onChange={handleChange}
+                        autoComplete="email"
+                        inputMode="email"
                         required
+                        aria-describedby="email-hint"
                       />
+                      <p id="email-hint" className="sr-only">Enter your email address</p>
                     </div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
@@ -115,7 +159,11 @@ export default function ContactPage() {
                         placeholder="(555) 123-4567"
                         value={formData.phone}
                         onChange={handleChange}
+                        autoComplete="tel"
+                        inputMode="tel"
+                        aria-describedby="phone-hint"
                       />
+                      <p id="phone-hint" className="sr-only">Enter your phone number (optional)</p>
                     </div>
                     <div className="space-y-2">
                       <label htmlFor="subject" className="text-sm font-medium">Subject</label>
@@ -126,7 +174,9 @@ export default function ContactPage() {
                         value={formData.subject}
                         onChange={handleChange}
                         required
+                        aria-describedby="subject-hint"
                       />
+                      <p id="subject-hint" className="sr-only">Enter the subject of your message</p>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -139,7 +189,9 @@ export default function ContactPage() {
                       value={formData.message}
                       onChange={handleChange}
                       required
+                      aria-describedby="message-hint"
                     />
+                    <p id="message-hint" className="sr-only">Enter your message details</p>
                   </div>
                   <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? (
@@ -149,9 +201,10 @@ export default function ContactPage() {
                         Send Message <Send className="w-4 h-4 ml-2" />
                       </>
                     )}
-                  </Button>
-                </form>
-              </CardContent>
+</Button>
+                  </form>
+                )}
+                </CardContent>
             </Card>
           </div>
 

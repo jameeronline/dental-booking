@@ -134,3 +134,37 @@ export async function sendAdminNotification(
     return { success: false, error }
   }
 }
+
+export async function sendContactNotification(
+  to: string,
+  contactName: string,
+  contactEmail: string,
+  contactPhone: string | null,
+  subject: string,
+  message: string
+) {
+  try {
+    await resend.emails.send({
+      from: 'DentalBook <noreply@dentalbook.com>',
+      to,
+      subject: `New Contact Form: ${subject}`,
+      html: `
+        <h1>New Contact Form Submission</h1>
+        <p>A new contact form has been submitted.</p>
+        <h2>Contact Details</h2>
+        <ul>
+          <li><strong>Name:</strong> ${contactName}</li>
+          <li><strong>Email:</strong> ${contactEmail}</li>
+          <li><strong>Phone:</strong> ${contactPhone || 'Not provided'}</li>
+          <li><strong>Subject:</strong> ${subject}</li>
+        </ul>
+        <h2>Message</h2>
+        <p>${message.replace(/\n/g, '<br>')}</p>
+      `,
+    })
+    return { success: true }
+  } catch (error) {
+    console.error('Error sending contact notification:', error)
+    return { success: false, error }
+  }
+}

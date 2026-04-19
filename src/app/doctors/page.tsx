@@ -42,6 +42,14 @@ export default function DoctorsPage() {
     fetchDentists()
   }, [])
 
+  useEffect(() => {
+    setTimeout(() => {
+      document.querySelectorAll('.scroll-animate').forEach(el => {
+        el.classList.add('visible')
+      })
+    }, 100)
+  }, [])
+
   const fetchDentists = async () => {
     setLoading(true)
     setError(null)
@@ -77,7 +85,7 @@ export default function DoctorsPage() {
       {/* Hero Section */}
       <section className="relative py-20 bg-gradient-to-br from-primary/5 via-background to-primary/10">
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
+          <div className="max-w-3xl mx-auto text-center scroll-animate animate-fade-in-up">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               Meet Our Doctors
             </h1>
@@ -102,7 +110,20 @@ export default function DoctorsPage() {
       {/* Specializations Filter */}
       <section className="py-8 bg-background border-b">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="block sm:hidden">
+            <select
+              value={selectedSpecialization}
+              onChange={(e) => setSelectedSpecialization(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {specializations.map(spec => (
+                <option key={spec} value={spec}>
+                  {spec === 'all' ? 'All Specializations' : spec}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="hidden sm:flex flex-wrap justify-center gap-3">
             {specializations.map(spec => (
               <Button
                 key={spec}
@@ -137,9 +158,9 @@ export default function DoctorsPage() {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredDentists.map((dentist) => (
+              {filteredDentists.map((dentist, index) => (
                 <Link key={dentist.id} href={`/doctors/${dentist.id}`}>
-                  <Card className="h-full hover:shadow-xl transition-all hover:-translate-y-2 cursor-pointer overflow-hidden">
+                  <Card className="h-full hover:shadow-xl transition-all hover:-translate-y-2 cursor-pointer overflow-hidden scroll-animate animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
                     <div className="h-48 bg-gradient-to-br from-primary to-primary/80 relative">
                       {dentist.photoUrl ? (
                         <img

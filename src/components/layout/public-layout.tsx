@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { Phone, Mail, MapPin, Menu, X, Calendar } from 'lucide-react'
+import { Phone, Mail, MapPin, Menu, X, Calendar, ChevronDown } from 'lucide-react'
 
 function PublicHeader() {
   const [isOpen, setIsOpen] = useState(false)
@@ -21,44 +21,53 @@ function PublicHeader() {
   return (
     <header className="bg-background/95 backdrop-blur-sm border-b sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-              <span className="text-primary-foreground font-bold text-lg">AZ</span>
+        <div className="flex justify-between items-center h-20">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+              <span className="text-primary-foreground font-bold text-xl">AZ</span>
             </div>
             <div className="hidden sm:block">
-              <span className="text-xl font-bold text-foreground font-display">AZ Hospital</span>
-              <p className="text-xs text-muted-foreground -mt-1">Dental Care</p>
+              <span className="text-2xl font-bold text-foreground font-display">AZ Hospital</span>
+              <p className="text-sm text-muted-foreground -mt-1">Dental Care</p>
             </div>
           </Link>
           
-          <nav className="hidden lg:flex items-center gap-6">
+          <nav className="hidden lg:flex items-center gap-8">
             {navLinks.map(link => (
-              <Link key={link.href} href={link.href} className="text-sm text-foreground hover:text-foreground transition-colors">
+              <Link key={link.href} href={link.href} className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                 {link.label}
               </Link>
             ))}
           </nav>
           
-          <div className="hidden lg:flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost" size="sm">Sign In</Button>
-            </Link>
-            <Link href="/book">
-              <Button size="sm" className="shadow-lg shadow-primary/20 gap-2">
-                <Calendar className="w-4 h-4" />
-                Book Now
+          <div className="flex items-center gap-3">
+            <Link href="/book" className="lg:hidden">
+              <Button className="shadow-primary/20 gap-2 h-10 px-4">
+                <Calendar className="w-5 h-5" />
+                Book <span className="sr md:inline">Appointment</span>
               </Button>
             </Link>
-          </div>
+            
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="lg:hidden p-2 hover:bg-muted rounded-md transition-colors"
+              aria-label="Toggle menu"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
 
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden p-2 hover:bg-muted rounded-md transition-colors"
-            aria-label="Toggle menu"
-          >
-            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+            <div className="hidden lg:flex items-center gap-4">
+              <Link href="/login">
+                <Button variant="secondary" size="lg">Sign In</Button>
+              </Link>
+              <Link href="/book">
+                <Button size="lg" className="shadow-primary/20 gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Book Appointment
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
 
         {isOpen && (
@@ -77,14 +86,14 @@ function PublicHeader() {
             </nav>
             <div className="flex flex-col gap-2 pt-4 border-t">
               <Link href="/login" onClick={() => setIsOpen(false)}>
-                <Button variant="outline" className="w-full">Sign In</Button>
+                <Button variant="secondary" className="w-full">Sign In</Button>
               </Link>
-              <Link href="/book" onClick={() => setIsOpen(false)}>
+              {/* <Link href="/book" onClick={() => setIsOpen(false)}>
                 <Button className="w-full shadow-lg shadow-primary/20 gap-2">
                   <Calendar className="w-4 h-4" />
-                  Book Now
+                  Book Appointment
                 </Button>
-              </Link>
+              </Link> */}
             </div>
           </div>
         )}
@@ -93,12 +102,31 @@ function PublicHeader() {
   )
 }
 
+function CollapsibleSection({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen)
+
+  return (
+    <div className="border-b border-slate-800 lg:border-0">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between py-4 lg:py-0"
+      >
+        <h4 className="font-semibold md:mb-6">{title}</h4>
+        <ChevronDown className={`w-5 h-5 transition-transform lg:hidden ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      <div className={`${isOpen ? 'block' : 'hidden'} lg:block pb-4 lg:pb-0`}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
 function PublicFooter() {
   return (
     <footer className="bg-slate-950 text-white py-16">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          <div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+          <div className="lg:row-span-2">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-lg">AZ</span>
@@ -134,8 +162,7 @@ function PublicFooter() {
             </div>
           </div>
 
-          <div>
-            <h4 className="font-semibold mb-6">Quick Links</h4>
+          <CollapsibleSection title="Quick Links">
             <ul className="space-y-3 text-sm text-slate-400">
               <li><Link href="/services" className="hover:text-white transition-colors">Our Services</Link></li>
               <li><Link href="/doctors" className="hover:text-white transition-colors">Our Doctors</Link></li>
@@ -144,20 +171,18 @@ function PublicFooter() {
               <li><Link href="/careers" className="hover:text-white transition-colors">Careers</Link></li>
               <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
             </ul>
-          </div>
+          </CollapsibleSection>
 
-          <div>
-            <h4 className="font-semibold mb-6">Services</h4>
+          <CollapsibleSection title="Services">
             <ul className="space-y-3 text-sm text-slate-400">
               <li><Link href="/services" className="hover:text-white transition-colors">General Dentistry</Link></li>
               <li><Link href="/services" className="hover:text-white transition-colors">Cosmetic Dentistry</Link></li>
               <li><Link href="/services" className="hover:text-white transition-colors">Orthodontics</Link></li>
               <li><Link href="/services" className="hover:text-white transition-colors">Oral Surgery</Link></li>
             </ul>
-          </div>
+          </CollapsibleSection>
 
-          <div>
-            <h4 className="font-semibold mb-6">Contact Info</h4>
+          <CollapsibleSection title="Contact Info" defaultOpen={true}>
             <ul className="space-y-4 text-sm text-slate-400">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -172,7 +197,7 @@ function PublicFooter() {
                 <span>info@azhospital.com</span>
               </li>
             </ul>
-          </div>
+          </CollapsibleSection>
         </div>
 
         <Separator className="bg-slate-800 mb-8" />

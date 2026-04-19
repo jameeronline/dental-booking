@@ -261,7 +261,31 @@ export default function CareersPage() {
       {/* Filters */}
       <section className="py-6 bg-muted/30 border-y">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap gap-4 justify-center">
+          <div className="block sm:hidden space-y-3">
+            <select
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {departments.map(dept => (
+                <option key={dept} value={dept}>
+                  {dept === 'all' ? 'All Departments' : dept}
+                </option>
+              ))}
+            </select>
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {jobTypes.map(type => (
+                <option key={type} value={type}>
+                  {type === 'all' ? 'All Types' : type}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="hidden sm:flex flex-wrap gap-4 justify-center">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Department:</span>
               <div className="flex flex-wrap gap-2">

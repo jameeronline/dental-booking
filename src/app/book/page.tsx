@@ -225,6 +225,7 @@ function BookingContent() {
     if (pendingStep !== null) {
       setStep(pendingStep)
       setPendingStep(null)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
 
@@ -280,20 +281,20 @@ function BookingContent() {
           Book Appointment
           <span className="text-muted-foreground ml-2 text-lg md:text-xl">— {stepTitles[step - 1]}</span>
         </h1>
-          <div className="flex items-center gap-2 text-sm flex-wrap">
+          <div className="flex items-center justify-between gap-1 text-sm flex-wrap w-full overflow-x-auto pb-2">
             {[1, 2, 3, 4].map((s, i) => (
-              <div key={s} className="flex items-center">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold text-sm transition-all ${
+              <div key={s} className="flex items-center flex-1 min-w-0">
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold text-sm transition-all shrink-0 ${
                   step === s ? 'bg-primary text-primary-foreground' :
                   step > s ? 'bg-primary/20 text-primary' :
                   'bg-muted text-muted-foreground'
                 }`}>
                   {step > s ? <Check className="w-4 h-4" /> : s}
                 </div>
-                <span className={`ml-2 text-sm hidden sm:inline ${step === s ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                <span className={`ml-2 text-xs md:text-sm truncate ${step === s ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                   {stepTitles[i]}
                 </span>
-                {i < 3 && <span className="text-muted-foreground mx-2">→</span>}
+                {i < 3 && <span className="text-muted-foreground mx-1 shrink-0">→</span>}
               </div>
             ))}
           </div>
@@ -375,8 +376,8 @@ function BookingContent() {
               )}
               
               {selectedService && !servicesError && services.length > 0 && (
-                <div className="mt-6 flex justify-end">
-                  <Button onClick={proceedToNextStep} size="lg" className="gap-2">
+                <div className="mt-6">
+                  <Button onClick={proceedToNextStep} size="lg" className="w-full md:w-auto gap-2">
                     Next: Select Dentist <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -445,8 +446,8 @@ function BookingContent() {
               )}
               
               {selectedDentist && !dentistsError && dentists.length > 0 && (
-                <div className="mt-6 flex justify-end">
-                  <Button onClick={proceedToNextStep} size="lg" className="gap-2">
+                <div className="mt-6">
+                  <Button onClick={proceedToNextStep} size="lg" className="w-full md:w-auto gap-2">
                     Next: Select Date & Time <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -545,8 +546,8 @@ function BookingContent() {
               </div>
               
               {selectedTime && (
-                <div className="mt-6 flex justify-end">
-                  <Button onClick={proceedToNextStep} size="lg" className="gap-2">
+                <div className="mt-6">
+                  <Button onClick={proceedToNextStep} size="lg" className="w-full md:w-auto gap-2">
                     Next: Your Details <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>

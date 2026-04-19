@@ -67,6 +67,14 @@ export default function ServicesPage() {
     fetchServices()
   }, [])
 
+  useEffect(() => {
+    setTimeout(() => {
+      document.querySelectorAll('.scroll-animate').forEach(el => {
+        el.classList.add('visible')
+      })
+    }, 100)
+  }, [])
+
   const fetchServices = async () => {
     setLoading(true)
     setError(null)
@@ -101,7 +109,7 @@ export default function ServicesPage() {
       {/* Hero Section */}
       <section className="relative py-20 bg-gradient-to-br from-primary/5 via-background to-primary/10">
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
+          <div className="max-w-3xl mx-auto text-center scroll-animate animate-fade-in-up">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               Our Dental Services
             </h1>
@@ -126,7 +134,20 @@ export default function ServicesPage() {
       {/* Categories Filter */}
       <section className="py-8 bg-background border-b">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="block sm:hidden">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {categories.map(category => (
+                <option key={category} value={category}>
+                  {category === 'all' ? 'All Services' : category.replace(/_/g, ' ')}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="hidden sm:flex flex-wrap justify-center gap-3">
             {categories.map(category => (
               <Button
                 key={category}
@@ -169,7 +190,7 @@ export default function ServicesPage() {
                 return (
                   <Link key={service.id} href={`/services/${service.id}`}>
                     <Card
-                      className={`h-full hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer ${colorClass}`}
+                      className={`h-full hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer scroll-animate animate-fade-in-up ${colorClass}`}
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <CardContent className="p-6">

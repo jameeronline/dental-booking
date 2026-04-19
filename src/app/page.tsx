@@ -188,34 +188,19 @@ const features = [
   }
 ]
 
-function useScrollAnimation() {
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible')
-          }
-        })
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
-    )
-
-    document.querySelectorAll('.scroll-animate').forEach((el) => {
-      observer.observe(el)
-    })
-
-    return () => observer.disconnect()
-  }, [])
-}
-
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
   const timerRef = useRef<NodeJS.Timeout>()
 
-  useScrollAnimation()
+  useEffect(() => {
+    setTimeout(() => {
+      document.querySelectorAll('.scroll-animate').forEach(el => {
+        el.classList.add('visible')
+      })
+    }, 100)
+  }, [])
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -242,7 +227,7 @@ export default function HomePage() {
         <PublicHeader />
 
       {/* Hero Slider */}
-      <section className="relative h-[500px] md:h-[600px] overflow-hidden">
+      <section id="hero" data-animate className="relative h-[500px] md:h-[600px] overflow-hidden">
         {heroSlides.map((slide, index) => (
           <div
             key={slide.id}
@@ -295,8 +280,8 @@ export default function HomePage() {
             {features.map((feature, index) => (
               <div
                 key={feature.id}
-                className={`scroll-animate animate-fade-in-up text-center p-4`}
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="scroll-animate animate-fade-in-up text-center p-4"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <feature.icon className="w-6 h-6 text-primary" />
@@ -310,7 +295,7 @@ export default function HomePage() {
       </section>
 
       {/* Services */}
-      <section id="services" className="py-20 bg-background">
+      <section id="services" data-animate className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="scroll-animate text-primary font-semibold text-sm tracking-wider uppercase">Our Services</span>
@@ -358,7 +343,7 @@ export default function HomePage() {
       </section>
 
       {/* About Section */}
-      <section className="py-20 bg-primary text-primary-foreground">
+      <section id="about" data-animate className="py-20 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="scroll-animate">

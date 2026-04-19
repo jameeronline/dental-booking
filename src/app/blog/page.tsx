@@ -112,7 +112,7 @@ const blogPosts: BlogPost[] = [
     author: { name: 'Dr. Sarah Johnson', role: 'Chief Dentist', avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop' },
     publishedDate: '2026-03-20',
     readTime: 6,
-    image: 'https://images.unsplash.com/photo-1606265752439-1ca187a9e2a5?w=800&h=500&fit=crop',
+    image: 'https://images.unsplash.com/photo-1485217988980-11786ced9454?w=800&h=500&fit=crop',
     featured: false,
   },
   {
@@ -245,7 +245,20 @@ export default function BlogPage() {
       {/* Categories */}
       <section className="py-6 bg-background border-b">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="block sm:hidden">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat}>
+                  {cat === 'all' ? 'All Posts' : cat}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="hidden sm:flex flex-wrap justify-center gap-3">
             {categories.map(cat => (
               <Button
                 key={cat}

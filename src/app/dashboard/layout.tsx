@@ -16,6 +16,7 @@ import {
   Menu,
   Bell,
   Search,
+  MessageSquare,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -57,6 +58,7 @@ const adminNav: NavItem[] = [
   { label: 'Patients', href: '/dashboard/patients', icon: <Users className="w-5 h-5" /> },
   { label: 'Dentists', href: '/dashboard/dentists', icon: <Stethoscope className="w-5 h-5" /> },
   { label: 'Services', href: '/dashboard/services', icon: <ClipboardList className="w-5 h-5" /> },
+  { label: 'Contact Messages', href: '/dashboard/contacts', icon: <MessageSquare className="w-5 h-5" /> },
 ]
 
 export default async function DashboardLayout({
