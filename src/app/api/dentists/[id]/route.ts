@@ -55,7 +55,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { email, name, phone, specialization, bio, consultationFee, photoUrl, isActive, password, socialLinks } = body
+    const { email, name, phone, specialization, bio, consultationFee, photoUrl, isActive, password, socialLinks, emergencyContactName, emergencyContactPhone, emergencyContactRelation } = body
 
     const userUpdateData: Record<string, unknown> = {}
     if (email) userUpdateData.email = email
@@ -79,6 +79,9 @@ export async function PUT(
     if (photoUrl !== undefined) dentistUpdateData.photoUrl = photoUrl
     if (socialLinks !== undefined) dentistUpdateData.socialLinks = typeof socialLinks === 'string' ? socialLinks : JSON.stringify(socialLinks)
     if (session.user.role === 'ADMIN' && isActive !== undefined) dentistUpdateData.isActive = isActive
+    if (emergencyContactName !== undefined) dentistUpdateData.emergencyContactName = emergencyContactName
+    if (emergencyContactPhone !== undefined) dentistUpdateData.emergencyContactPhone = emergencyContactPhone
+    if (emergencyContactRelation !== undefined) dentistUpdateData.emergencyContactRelation = emergencyContactRelation
 
     const updatedDentist = await prisma.dentist.update({
       where: { id: params.id },

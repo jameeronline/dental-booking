@@ -55,7 +55,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { name, email, phone, specialization, bio, consultationFee, photoUrl, facebook, twitter, instagram, linkedin, website } = body
+    const { name, email, phone, specialization, bio, consultationFee, photoUrl, facebook, twitter, instagram, linkedin, website, emergencyContactName, emergencyContactPhone, emergencyContactRelation } = body
 
     const dentist = await prisma.dentist.findFirst({
       where: { userId: session.user.id },
@@ -83,6 +83,9 @@ export async function PUT(request: Request) {
         consultationFee: parseFloat(consultationFee) || 0,
         photoUrl,
         socialLinks: JSON.stringify({ facebook, twitter, instagram, linkedin, website }),
+        emergencyContactName,
+        emergencyContactPhone,
+        emergencyContactRelation,
       },
       include: { user: true },
     })

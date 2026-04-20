@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, password, name, phone, specialization, bio, consultationFee, photoUrl, isActive, socialLinks } = body
+    const { email, password, name, phone, specialization, bio, consultationFee, photoUrl, isActive, socialLinks, emergencyContactName, emergencyContactPhone, emergencyContactRelation } = body
 
     if (!email || !password || !name || !specialization) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -77,6 +77,9 @@ export async function POST(request: NextRequest) {
         photoUrl,
         isActive: isActive ?? true,
         socialLinks: socialLinks ? (typeof socialLinks === 'string' ? socialLinks : JSON.stringify(socialLinks)) : null,
+        emergencyContactName,
+        emergencyContactPhone,
+        emergencyContactRelation,
       },
       include: { user: true },
     })

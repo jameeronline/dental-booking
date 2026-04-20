@@ -21,56 +21,15 @@ interface DentistProfile {
   consultationFee: number
   isActive: boolean
   socialLinks: { facebook?: string; twitter?: string; instagram?: string; linkedin?: string; website?: string }
+  emergencyContactName: string | null
+  emergencyContactPhone: string | null
+  emergencyContactRelation: string | null
   user: {
     id: string
     name: string
     email: string
     phone: string | null
   }
-}
-
-interface SocialInputProps {
-  id: string
-  label: string
-  icon: React.ReactNode
-  value: string
-  onChange: (value: string) => void
-  placeholder: string
-  prefix: string
-}
-
-function SocialInput({ id, label, icon, value, onChange, placeholder, prefix }: SocialInputProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let newValue = e.target.value
-    
-    if (!newValue.startsWith(prefix) && newValue.length > 0) {
-      newValue = prefix + newValue
-    }
-    
-    onChange(newValue)
-  }
-
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id} className="flex items-center gap-2">
-        {icon}
-        {label}
-      </Label>
-      <div className="flex rounded-md shadow-sm">
-        <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-sm text-muted-foreground">
-          {prefix}
-        </span>
-        <input
-          id={id}
-          type="text"
-          value={value.replace(prefix, '')}
-          onChange={handleChange}
-          placeholder={placeholder}
-          className="flex-1 min-w-0 rounded-none rounded-r-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-      </div>
-    </div>
-  )
 }
 
 export default function DentistEditPage() {
@@ -95,6 +54,9 @@ export default function DentistEditPage() {
     instagram: '',
     linkedin: '',
     website: '',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+    emergencyContactRelation: '',
   })
 
   useEffect(() => {
@@ -121,6 +83,9 @@ export default function DentistEditPage() {
           instagram: data.socialLinks?.instagram || '',
           linkedin: data.socialLinks?.linkedin || '',
           website: data.socialLinks?.website || '',
+          emergencyContactName: data.emergencyContactName || '',
+          emergencyContactPhone: data.emergencyContactPhone || '',
+          emergencyContactRelation: data.emergencyContactRelation || '',
         })
       }
     } catch (error) {
@@ -379,58 +344,144 @@ export default function DentistEditPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <Globe className="w-4 h-4 text-primary" />
+              <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <Phone className="w-4 h-4 text-red-600" />
               </div>
-              Social Links
+              Emergency Contact
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <SocialInput
-              id="facebook"
-              label="Facebook"
-              icon={<Link2 className="w-4 h-4" />}
-              value={formData.facebook}
-              onChange={(value) => setFormData({ ...formData, facebook: value })}
-              placeholder="username"
-              prefix="facebook.com/"
-            />
-            <SocialInput
-              id="twitter"
-              label="Twitter"
-              icon={<Link2 className="w-4 h-4" />}
-              value={formData.twitter}
-              onChange={(value) => setFormData({ ...formData, twitter: value })}
-              placeholder="username"
-              prefix="twitter.com/"
-            />
-            <SocialInput
-              id="instagram"
-              label="Instagram"
-              icon={<Link2 className="w-4 h-4" />}
-              value={formData.instagram}
-              onChange={(value) => setFormData({ ...formData, instagram: value })}
-              placeholder="username"
-              prefix="instagram.com/"
-            />
-            <SocialInput
-              id="linkedin"
-              label="LinkedIn"
-              icon={<Link2 className="w-4 h-4" />}
-              value={formData.linkedin}
-              onChange={(value) => setFormData({ ...formData, linkedin: value })}
-              placeholder="username"
-              prefix="linkedin.com/in/"
-            />
-            <SocialInput
-              id="website"
-              label="Website"
-              icon={<Globe className="w-4 h-4" />}
-              value={formData.website}
-              onChange={(value) => setFormData({ ...formData, website: value })}
-              placeholder="yourwebsite.com"
-              prefix="https://"
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="emergencyContactName">Contact Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="emergencyContactName"
+                    value={formData.emergencyContactName}
+                    onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
+                    className="pl-10"
+                    placeholder="Jane Smith"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="emergencyContactPhone">Phone</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="emergencyContactPhone"
+                    type="tel"
+                    value={formData.emergencyContactPhone}
+                    onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
+                    className="pl-10"
+                    placeholder="(555) 987-6543"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="emergencyContactRelation">Relationship</Label>
+              <select
+                id="emergencyContactRelation"
+                value={formData.emergencyContactRelation}
+                onChange={(e) => setFormData({ ...formData, emergencyContactRelation: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Select relationship</option>
+                <option value="Spouse">Spouse</option>
+                <option value="Parent">Parent</option>
+                <option value="Sibling">Sibling</option>
+                <option value="Child">Child</option>
+                <option value="Friend">Friend</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <Globe className="w-4 h-4 text-primary" />
+              </div>
+              Social Media
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="facebook">Facebook</Label>
+              <div className="relative">
+                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="facebook"
+                  value={formData.facebook}
+                  onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
+                  className="pl-10"
+                  placeholder="username"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="twitter">Twitter / X</Label>
+              <div className="relative">
+                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="twitter"
+                  value={formData.twitter}
+                  onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                  className="pl-10"
+                  placeholder="username"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="instagram">Instagram</Label>
+              <div className="relative">
+                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="instagram"
+                  value={formData.instagram}
+                  onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+                  className="pl-10"
+                  placeholder="username"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="linkedin">LinkedIn</Label>
+              <div className="relative">
+                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="linkedin"
+                  value={formData.linkedin}
+                  onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                  className="pl-10"
+                  placeholder="username"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="website">Website</Label>
+              <div className="relative">
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="website"
+                  type="url"
+                  value={formData.website}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  className="pl-10"
+                  placeholder="https://yourwebsite.com"
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
 

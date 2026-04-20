@@ -30,16 +30,19 @@ model User {
 }
 
 model Dentist {
-  id               String    @id @default(cuid())
-  userId           String    @unique
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  specialization   String
-  bio              String?
-  consultationFee  Float     @default(0)
-  photoUrl         String?
-  isActive         Boolean   @default(true)
-  socialLinks      String?
-  createdAt        DateTime  @default(now())
+  id                        String    @id @default(cuid())
+  userId                    String    @unique
+  user                      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialization            String
+  bio                       String?
+  consultationFee          Float     @default(0)
+  photoUrl                  String?
+  isActive                  Boolean   @default(true)
+  socialLinks               String?
+  emergencyContactName      String?
+  emergencyContactPhone     String?
+  emergencyContactRelation  String?
+  createdAt                 DateTime  @default(now())
 
   appointments     Appointment[]
   availability     Availability[]
